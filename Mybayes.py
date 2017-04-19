@@ -7,7 +7,7 @@ Created on Sat Mar 25 10:17:16 2017
 import re
 import numpy as np
     
-def textParse(emailtext):#´¦ÀíÓÊ¼þÄÚÈÝ·Ö´Ê²¢É¾³ý
+def textParse(emailtext):#å¤„ç†é‚®ä»¶å†…å®¹åˆ†è¯å¹¶åˆ é™¤
     listOfTikens = re.split('\\W*',emailtext)
     return [tok.lower() for tok in listOfTikens if len(tok) > 2]
 
@@ -39,52 +39,39 @@ def setOfWords2Vec(NonumList,inputSet):
             returnVec[NonumList.index(word)] = 1
     return returnVec
 
+def bagOfWords2Vec(NonumList,inputSet):
+    returnVec = [0]*len(NonumList)
+    for word in inputSet:
+        if word in NonumList:
+            returnVec[NonumList.index(word)] += 1
+    return returnVec
+
 
 def trainNB(trainMatrix,trainClass):
-    numTrainDocs = len(trainMatrix)#ÑµÁ·¼¯×ÖµäÖÐµÄ×ÖÊý
-    numWords = len(trainMatrix[0])#Ò»¸öÑµÁ·¼¯µÄ±àÂë³¤¶È
-    pAbusive = sum(trainClass)/float(numTrainDocs)#À¬»øÓÊ¼þµÄÏÈÑé¸ÅÂÊP£¨1£©
-    p0Num = np.ones(numWords);plNum = np.ones(numWords)#³õÊ¼»¯
+    numTrainDocs = len(trainMatrix)#è®­ç»ƒé›†å­—å…¸ä¸­çš„å­—æ•°
+    numWords = len(trainMatrix[0])#ä¸€ä¸ªè®­ç»ƒé›†çš„ç¼–ç é•¿åº¦
+    pAbusive = sum(trainClass)/float(numTrainDocs)#åžƒåœ¾é‚®ä»¶çš„å…ˆéªŒæ¦‚çŽ‡Pï¼ˆ1ï¼‰
+    p0Num = np.ones(numWords);plNum = np.ones(numWords)#åˆå§‹åŒ–
     p0Denom = 2.0;plDenom = 2.0
-    for i in range(numTrainDocs):#±éÀúÑµÁ·¼¯
-        if trainClass[i] == 1:#Èç¹ûÊÇÀ¬»øÓÊ¼þ
-            plNum  += trainMatrix[i]#¾ØÕóÏà¼Ó
-            plDenom  +=  sum(trainMatrix[i])#·ÖÄ¸
+    for i in range(numTrainDocs):#éåŽ†è®­ç»ƒé›†
+        if trainClass[i] == 1:#å¦‚æžœæ˜¯åžƒåœ¾é‚®ä»¶
+            plNum  += trainMatrix[i]#çŸ©é˜µç›¸åŠ 
+            plDenom  +=  sum(trainMatrix[i])#åˆ†æ¯
         else:
             p0Num += trainMatrix[i]
             p0Denom += sum(trainMatrix[i])
-    plVect = np.log(plNum/plDenom)#À¬»øÓÊ¼þµÄËÆÈ»ÂÊÀ¬»øÓÊ¼þÀàÖÐÒÔ×ÖµäÎªÌØÕ÷µÄËÆÈ»º¯Êý
+    plVect = np.log(plNum/plDenom)#åžƒåœ¾é‚®ä»¶çš„ä¼¼ç„¶çŽ‡åžƒåœ¾é‚®ä»¶ç±»ä¸­ä»¥å­—å…¸ä¸ºç‰¹å¾çš„ä¼¼ç„¶å‡½æ•°
     p0Vect = np.log(p0Num/p0Denom)
     return p0Vect,plVect,pAbusive
 
 
-def classifyNB(wordVector,P0v,plV,pSpam,th):
+def classifyNB(wordVector,P0v,plV,pSpam):
     pl = sum(wordVector * plV) + np.log(pSpam)
     P0 = sum(wordVector * P0v) + np.log(1.0 - pSpam)
-    if pl-P0 > th :
+    if pl > P0:
         return 1
     else:
         return 0
-    return pl-P0
-    
-def countROC(tsetresult,testLabel):
-    tp = 0;fp =0;tn =0;fn =0
-    for i in range(len(testLabel)):
-        if testLabel[i] == 1:
-            if tsetresult[i] != testLabel[i]:
-                fp = fp+1
-            else:
-                tp = tp+1
-        if testLabel[i]== 0:
-            if tsetresult[i] !=testLabel[i]:
-                fn =fn+1
-            else:
-                fp = fp+1
-    TPF = tp/(tp+fn)
-    TNF = tn/(fp+tn)
-    return TNF,TPF
-            
-    
 
 def createFinalList(p0v,p1v,NonumList):
     pp = [];finalList = []
@@ -109,51 +96,13 @@ def createFinalList(p0v,p1v,NonumList):
             fp1v.append(pp1v[i])
     return finalList,fp1v,fp0v
 
-def createFinalList2(p0idf,p1idf,NonumList,p0v,p1v):
-    pp = [];finalList2 = []
-    pp0v = p0idf.tolist()
-    pp1v = p1idf.tolist()
-    pidf = p1idf- p0idf
-    pp = pidf.tolist()
-    #maxv = max(pp)
-    #minv = min(pp)
-    #th = (maxv-minv)*0.8#(maxv - minv)
-    fp0v2 =[];fp1v2 = []
-    for i in range(len(pp)):
-        if pp[i]<4 and pp[i]>-4:
-            pp0v[i] = 0
-            pp1v[i] = 0
-        else:
-            finalList2.append(NonumList[i])
-            fp0v2.append(p0v[i])
-            fp1v2.append(p1v[i])
-            
-    return finalList2,fp1v2,fp0v2
-    
-    
 
-def count_tfidf(classList,NonumList,docList,p0v,p1v):
-    spamnum = sum(classList)
-    hamnum = len(classList)- spamnum
-    p0idf =[];p1idf = []
-    for i in range(len(NonumList)):
-        num = 0
-        for j in range(len(classList)):
-            if classList[j] == 1:#Èç¹ûÀ¬»øÓÊ¼þ
-                if NonumList[i] in docList[j]:
-                    num = num +1
-        idf1 = np.log(spamnum/float(1+num))
-        p1idf.append(idf1)
-    p1idf = np.array(p1idf)
-    for i in range(len(NonumList)):
-        num = 0
-        for j in range(len(classList)):
-            if classList[j] ==0:#Èç¹û²»ÊÇÀ¬»øÓÊ¼þ
-                if NonumList[i] in docList[j]:
-                    num =num+1
-        idf0 = np.log(hamnum/float(1 + num))
-        p0idf.append(idf0)
-    p0idf = np.array(p0idf)
-    p1tfidf = p1v*p1idf
-    p0tfidf = p0v*p0idf
-    return p1idf,p0idf,p1tfidf,p0tfidf
+    
+            
+            
+            
+    
+    
+    
+    
+    
