@@ -53,18 +53,18 @@ for i in range(1):
     VocabList = my.createVocabList(docList)#不重复词列表spam和ham
     NonumList = my.Nonum(VocabList)
     for trainnum in range(len(docList)):
-        print '        the '+trainnum+'th doc in '+len(docList) +'docs'
+        print '        the '+str(trainnum)+'th doc in '+str(len(docList)) +' docs'
         trainMat.append(my.setOfWords2Vec(NonumList,docList[trainnum]))#利用字典对训练集编码
     end = time.time()
-    print '    set up trainMat: ' + (end - start) + 's'
+    print '    set up trainMat: ' + str(end - start) + 's'
                        
     #开始训练
     print '    training...'
     start = time.time()
     p0v,p1v,pspam = my.trainNB(np.array(trainMat),np.array(classList))#计算先验概率
-    print '    training time: ' + time.time()-start + 's'
+    print '    training time: ' + str(time.time()-start) + 's'
                               
-    print '    prior: ' + pspam
+    print '    prior: ' + str(pspam)
     print '    testing...'
     strat = time.time()
     errorcount = 0#训练完成设置错去率为0
@@ -78,9 +78,9 @@ for i in range(1):
         re = my.classifyNB(np.array(testMat),p0v,p1v,pspam)
         if re != testLabel[testnum]:
             errorcount += 1
-    print '    the error rate: ' + ii + 'is:',float(errorcount)/len(testdocList)#得到错误率
+    print '    the error rate: ' + ii + 'is:',str(float(errorcount)/len(testdocList))#得到错误率
 
     errorrate.append(float(errorcount)/len(testdocList))
-    print '    testing time: ' +time.time()-strat + 's'
+    print '    testing time: ' +str(time.time()-strat) + 's'
 result = sum(errorrate)/10
 print 'the average error rate is:',result
