@@ -1,5 +1,0 @@
-<<<<<<< HEAD
-branch
-=======
-branch text
->>>>>>> 61b0ddcd328c20e73fb33d3a69ec37412c444334
